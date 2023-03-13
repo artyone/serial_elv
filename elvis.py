@@ -1,4 +1,4 @@
-import serial
+from serial import Serial, EIGHTBITS
 import serial.tools.list_ports as list_ports
 
 
@@ -146,7 +146,13 @@ class Elvis(object):
         data_H = int(str(f)[2:-8], 16)
         return [data_L, data_M, data_H]
 
-    def set_fout(self, frequency, port_index, channel_number, profile_index):
+    def set_fout(self, 
+                frequency, 
+                port_index, 
+                channel_number, 
+                profile_index, 
+                timeout, 
+                baudrate):
         """Формирование массивов для исполнения команд и загрузки данных на микросхему.
         Обязетально данные в функцию исполнения должны подаваться в виде 2 массивов:
         1. Массив регистров
@@ -164,9 +170,9 @@ class Elvis(object):
         else:
             all_dPh_data += self.CH2[profile_index]['data'].values()
 
-        return self.__exec_command(all_dPh_registers, all_dPh_data, port_index)
+        return self.__exec_command(all_dPh_registers, all_dPh_data, port_index, timeout, baudrate)
 
-    def __exec_command(self, registers, datas, port_index):
+    def __exec_command(self, registers, datas, port_index, timeout, baudrate):
         """Функция исполнения команд и записи данных. 
         Формат данных см. в описании set_fout.
         Команды всегда выполняются в связке 2 из команд. 
@@ -174,8 +180,7 @@ class Elvis(object):
         2. Команда WRITE + данные
         Коды см. в инициализации класса в словарях. 
         """
-        with serial.Serial(bytesize=serial.EIGHTBITS, timeout=0.2) as ser:
-            ser.baudrate = 115200
+        with Serial(baudrate=baudrate, bytesize=EIGHTBITS, timeout=timeout) as ser:
             ser.port = list(map(lambda x: x.device, self.get_ports()))[
                 port_index]
             ser.open()
@@ -189,10 +194,10 @@ class Elvis(object):
                 send_message = self.COMMAND_WR.to_bytes(1, byteorder='big') \
                     + data.to_bytes(2, byteorder='big')
                 ser.write(send_message)
-            # self.__output_console(ser)
-            return True
+            #self.__output_console(ser)
+            return self.get_answer(ser)
 
-    def switch_CH1_state(self, port_index):
+    def switch_CH1_state(self, port_index, timeout, baudrate):
         """Функция смены статуса 1 канала на обратный.
         Статус канала может быть либо ВКЛ, либо ВЫКЛ, но в связи с тем,
         что на микросхеме не реализован вывод данных, то весь процесс
@@ -202,24 +207,24 @@ class Elvis(object):
         сразу 2 каналов.   
         """
         if not self.state_CH1 and not self.state_CH2:
-            self.__exec_command([self.CTR], [0x1000], port_index)
+            answer = self.__exec_command([self.CTR], [0x1000], port_index, timeout, baudrate)
             self.state_CH1 = True
-            return True
+            return answer
         if not self.state_CH1 and self.state_CH2:
-            self.__exec_command([self.CTR], [0x3000], port_index)
+            answer = self.__exec_command([self.CTR], [0x3000], port_index, timeout, baudrate)
             self.state_CH1 = True
-            return True
+            return answer
         if self.state_CH1 and not self.state_CH2:
-            self.__exec_command([self.CTR], [0x0000], port_index)
+            answer = self.__exec_command([self.CTR], [0x0000], port_index, timeout, baudrate)
             self.state_CH1 = False
-            return True
+            return answer
         if self.state_CH1 and self.state_CH2:
-            self.__exec_command([self.CTR], [0x2000], port_index)
+            answer = self.__exec_command([self.CTR], [0x2000], port_index, timeout, baudrate)
             self.state_CH1 = False
-            return True
+            return answer
         return False
 
-    def switch_CH2_state(self, port_index):
+    def switch_CH2_state(self, port_index, timeout, baudrate):
         """Функция смены статуса 2 канала на обратный.
         Статус канала может быть либо ВКЛ, либо ВЫКЛ, но в связи с тем,
         что на микросхеме не реализован вывод данных, то весь процесс
@@ -229,21 +234,21 @@ class Elvis(object):
         сразу 2 каналов.   
         """
         if not self.state_CH2 and not self.state_CH1:
-            self.__exec_command([self.CTR], [0x2000], port_index)
+            answer = self.__exec_command([self.CTR], [0x2000], port_index, timeout, baudrate)
             self.state_CH2 = True
-            return True
+            return answer
         if not self.state_CH2 and self.state_CH1:
-            self.__exec_command([self.CTR], [0x3000], port_index)
+            answer = self.__exec_command([self.CTR], [0x3000], port_index, timeout, baudrate)
             self.state_CH2 = True
-            return True
+            return answer
         if self.state_CH2 and not self.state_CH1:
-            self.__exec_command([self.CTR], [0x0000], port_index)
+            answer = self.__exec_command([self.CTR], [0x0000], port_index, timeout, baudrate)
             self.state_CH2 = False
-            return True
+            return answer
         if self.state_CH2 and self.state_CH1:
-            self.__exec_command([self.CTR], [0x1000], port_index)
+            answer = self.__exec_command([self.CTR], [0x1000], port_index, timeout, baudrate)
             self.state_CH2 = False
-            return True
+            return answer
         return False
 
     # Не используется, реализовано будет аппаратно
@@ -253,16 +258,23 @@ class Elvis(object):
     def switch_to_CH1_profile_2(self, port_index):
         self.__exec_command([self.SEL_REG], [self.SEL_REG_CH1_p_2], port_index)
 
+    def get_answer(self, ser):
+        """Получение ответа"""
+        a = ser.readline()
+        return a.hex()
+
     def __output_console(self, ser):
         """Вывод в консоль для отладки"""
         print('------input-----')
+        b = b''
         while True:
             a = ser.read(1)
             if a == b'':
                 break
-            a = a.hex()
-            if a == '10':
-                print('st', ser.read(2).hex(), end=' ')
-            elif a == '20':
-                print('wr', ser.read(2).hex())
-        print()
+            b += a
+            #a = a.hex()
+            # if a == '10':
+            #     print('st', ser.read(2).hex(), end=' ')
+            # elif a == '20':
+            #     print('wr', ser.read(2).hex())
+        print(b.hex())
