@@ -1,11 +1,14 @@
 from serial import Serial, EIGHTBITS
 import serial.tools.list_ports as list_ports
+import time
 
 
 class Elvis(object):
     """Класс программирования микросхемы интегральной 1508ПЛ8Т"""
     
     def __init__(self):
+        self.command = ''
+        self.answer = ''
         self.state_CH1 = False
         self.state_CH2 = False
         self.processor_frequency = 1000
@@ -172,7 +175,7 @@ class Elvis(object):
 
         return self.__exec_command(all_dPh_registers, all_dPh_data, port_index, timeout, baudrate)
 
-    def __exec_command(self, registers, datas, port_index, timeout, baudrate):
+    def __exec_command(self, registers, datas, port_index, timeout_command, baudrate):
         """Функция исполнения команд и записи данных. 
         Формат данных см. в описании set_fout.
         Команды всегда выполняются в связке 2 из команд. 
@@ -180,22 +183,29 @@ class Elvis(object):
         2. Команда WRITE + данные
         Коды см. в инициализации класса в словарях. 
         """
-        with Serial(baudrate=baudrate, bytesize=EIGHTBITS, timeout=timeout) as ser:
+        with Serial(baudrate=baudrate, bytesize=EIGHTBITS, timeout=0.2) as ser:
             ser.port = list(map(lambda x: x.device, self.get_ports()))[
                 port_index]
             ser.open()
             ser.flush()
+            self.command = []
             # print('------send------')
             for ch, data in zip(registers, datas):
                 #print('st', hex(ch), 'wr', hex(data))
                 send_message = self.COMMAND_SETA.to_bytes(1, byteorder='big') \
                     + ch.to_bytes(2, byteorder='big')
                 ser.write(send_message)
+                self.command.append('0x00' + send_message.hex())
+                time.sleep(timeout_command)
                 send_message = self.COMMAND_WR.to_bytes(1, byteorder='big') \
                     + data.to_bytes(2, byteorder='big')
                 ser.write(send_message)
+                self.command.append('0x00' + send_message.hex())
+                time.sleep(timeout_command)
             #self.__output_console(ser)
-            return self.get_answer(ser)
+            self.command = ', '.join(self.command)
+            self.set_answer(ser)
+            return True
 
     def switch_CH1_state(self, port_index, timeout, baudrate):
         """Функция смены статуса 1 канала на обратный.
@@ -258,10 +268,19 @@ class Elvis(object):
     def switch_to_CH1_profile_2(self, port_index):
         self.__exec_command([self.SEL_REG], [self.SEL_REG_CH1_p_2], port_index)
 
-    def get_answer(self, ser):
+    def set_answer(self, ser):
         """Получение ответа"""
-        a = ser.readline()
-        return a.hex()
+        self.answer = []
+        while True:
+            a = ser.read(3)
+            if a == b'':
+                break
+            self.answer.append('0x00' + a.hex()) 
+            if len(a) != 3:
+                self.answer.append(a.hex()) 
+                break
+        self.answer = ', '.join(self.answer)
+
 
     def __output_console(self, ser):
         """Вывод в консоль для отладки"""
