@@ -135,6 +135,59 @@ class App(tk.Tk):
             text='Включить',
             command=self.change_CH2_state
         )
+
+        self.lbl_sel_re6 = ttk.Label(
+            frame,
+            text='SEL_RE6'
+        )
+        self.combo_sel_re6_ch1 = ttk.Combobox(
+            frame,
+            width=3,
+            values=list(range(64)),
+            state="readonly")
+        self.lbl_sel_re6_ch1 = ttk.Label(
+            frame,
+            text='<- CH1'
+        )
+        self.lbl_sel_re6_ch2 = ttk.Label(
+            frame,
+            text='<- CH2'
+        )
+        self.combo_sel_re6_ch2 = ttk.Combobox(
+            frame,
+            width=3,
+            values=list(range(64)),
+            state="readonly")
+
+        self.combo_sel_re6_ch1.current(0)
+        self.combo_sel_re6_ch2.current(0)
+        self.btn_sel_re6 = ttk.Button(
+            frame,
+            text='Установить',
+            command=lambda: ''
+        )
+
+        self.lbl_sync = ttk.Label(
+            frame,
+            text='SYNC'
+        )
+        self.ent_sync = ttk.Entry(
+            frame
+        )
+        self.ent_sync.insert(0, '0000')
+        self.btn_sync = ttk.Button(
+            frame,
+            text='Установить',
+            command=lambda: ''
+        )
+
+        self.btn_clear = ttk.Button(
+            frame,
+            text='Очистка',
+            command=lambda: ''
+        )
+
+
         self.txt_logs = tk.Text(
             frame,
             width=60,
@@ -349,11 +402,25 @@ class App(tk.Tk):
         self.btn_fout2_on.grid(row=4, column=5, pady=5, padx=4, sticky='we')
         self.lbl_image.grid(row=0, column=6, pady=5,
                             padx=4, rowspan=5, sticky='S')
-        self.txt_logs.grid(row=5, column=1, pady=5, padx=4,
+
+        self.lbl_sel_re6.grid(row=5, column=0, pady=5, padx=4, sticky='e')
+        self.combo_sel_re6_ch1.grid(row=5, column=1, pady=5, padx=4, sticky='we')
+        self.lbl_sel_re6_ch1.grid(row=5, column=2, pady=5, padx=4, sticky='w')
+        self.combo_sel_re6_ch2.grid(row=5, column=3, pady=5, padx=4, sticky='we')
+        self.lbl_sel_re6_ch2.grid(row=5, column=4, pady=5, padx=4, sticky='w')
+        self.btn_sel_re6.grid(row=5, column=5, pady=5, padx=4, sticky='e')
+
+        self.lbl_sync.grid(row=6, column=0, pady=5, padx=4, sticky='e')
+        self.ent_sync.grid(row=6, column=1, pady=5, padx=4, sticky='we')
+        self.btn_sync.grid(row=6, column=5, pady=5, padx=4, sticky='e')
+
+        self.btn_clear.grid(row=7, column=4, pady=5, padx=4, sticky='we', columnspan=2)
+        
+        self.txt_logs.grid(row=8, column=1, pady=5, padx=4,
                            sticky='w', columnspan=5)
-        self.answer_logs.grid(row=6, column=1, pady=5, padx=4,
+        self.answer_logs.grid(row=9, column=1, pady=5, padx=4,
                            sticky='w', columnspan=5)
-        self.geometry(self.center_window(width=700, height=530))
+        self.geometry(self.center_window(width=700, height=700))
         self.resizable(False, False)
 
     def center_window(self, width, height):
