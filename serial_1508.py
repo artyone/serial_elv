@@ -136,35 +136,35 @@ class App(tk.Tk):
             command=self.change_CH2_state
         )
 
-        self.lbl_sel_re6 = ttk.Label(
+        self.lbl_sel_reg = ttk.Label(
             frame,
-            text='SEL_RE6'
+            text='SEL_REG'
         )
-        self.combo_sel_re6_ch1 = ttk.Combobox(
+        self.combo_sel_reg_ch1 = ttk.Combobox(
             frame,
             width=3,
             values=list(range(64)),
             state="readonly")
-        self.lbl_sel_re6_ch1 = ttk.Label(
+        self.lbl_sel_reg_ch1 = ttk.Label(
             frame,
             text='<- CH1'
         )
-        self.lbl_sel_re6_ch2 = ttk.Label(
+        self.lbl_sel_reg_ch2 = ttk.Label(
             frame,
             text='<- CH2'
         )
-        self.combo_sel_re6_ch2 = ttk.Combobox(
+        self.combo_sel_reg_ch2 = ttk.Combobox(
             frame,
             width=3,
             values=list(range(64)),
             state="readonly")
 
-        self.combo_sel_re6_ch1.current(0)
-        self.combo_sel_re6_ch2.current(0)
-        self.btn_sel_re6 = ttk.Button(
+        self.combo_sel_reg_ch1.current(0)
+        self.combo_sel_reg_ch2.current(0)
+        self.btn_sel_reg = ttk.Button(
             frame,
             text='Установить',
-            command=lambda: ''
+            command=self.set_sel_reg
         )
 
         self.lbl_sync = ttk.Label(
@@ -178,13 +178,13 @@ class App(tk.Tk):
         self.btn_sync = ttk.Button(
             frame,
             text='Установить',
-            command=lambda: ''
+            command=self.sync
         )
 
         self.btn_clear = ttk.Button(
             frame,
             text='Очистка',
-            command=lambda: ''
+            command=self.clear
         )
 
 
@@ -355,10 +355,92 @@ class App(tk.Tk):
             message = e
         except Exception as e:
             message = e
-        if self.program.state_CH1:
-            self.btn_fout1_on.config(text='Выключить')
+        if self.program.state_CH2:
+            self.btn_fout2_on.config(text='Выключить')
         else:
-            self.btn_fout1_on.config(text='Включить')
+            self.btn_fout2_on.config(text='Включить')
+
+        self.log(message, self.txt_logs)
+
+    def clear(self):
+        try:
+            timeout = float(self.ent_timeout.get())
+            baudrate = float(self.ent_baudrate.get())
+        except:
+            return self.log('Введены неверные значения timeout или baudrate')
+
+        try:
+            answer = self.program.set_clear(self.lb_com.current(),timeout, baudrate)
+            if answer:
+                message = f'Очищено. timeout: {timeout}, baudrate: {baudrate}'
+                answer = f'Команды:\n{self.program.command}\nOтвет:\n{self.program.answer}\n--------------------------\n'
+                self.log(answer, self.answer_logs)
+                self.btn_fout1_on.config(text='Включить')
+                self.btn_fout2_on.config(text='Включить')
+            else:
+                message = 'Статус каналов не определен'
+        except IndexError:
+            message = 'Устройство было отключено после запуска программы. Необходимо перезапустить программу'
+        except ValueError as e:
+            message = e
+        except SerialException as e:
+            message = e
+        except Exception as e:
+            message = e
+
+        self.log(message, self.txt_logs)
+
+    def sync(self):
+        try:
+            timeout = float(self.ent_timeout.get())
+            baudrate = float(self.ent_baudrate.get())
+            number = int(self.ent_sync.get(), 16)
+        except:
+            return self.log('Введены неверные значения sync, timeout или baudrate')
+
+        try:
+            answer = self.program.set_sync(number, self.lb_com.current(), timeout, baudrate)
+            if answer:
+                message = f'SYNC {hex(number)} установлен. timeout: {timeout}, baudrate: {baudrate}'
+                answer = f'Команды:\n{self.program.command}\nOтвет:\n{self.program.answer}\n--------------------------\n'
+                self.log(answer, self.answer_logs)
+            else:
+                message = 'Статус каналов не определен'
+        except IndexError:
+            message = 'Устройство было отключено после запуска программы. Необходимо перезапустить программу'
+        except ValueError as e:
+            message = e
+        except SerialException as e:
+            message = e
+        except Exception as e:
+            message = e
+
+        self.log(message, self.txt_logs)
+
+    def set_sel_reg(self):
+        try:
+            timeout = float(self.ent_timeout.get())
+            baudrate = float(self.ent_baudrate.get())
+        except:
+            return self.log('Введены неверные значения sync, timeout или baudrate')
+        ch1 = self.combo_sel_reg_ch1.current()
+        ch2 = self.combo_sel_reg_ch2.current()
+        try:
+            answer = self.program.set_sel_reg(ch1, ch2, self.lb_com.current(), timeout, baudrate)
+            if answer:
+                message = f'SEL_REG установлен. timeout: {timeout}, baudrate: {baudrate}'
+                answer = f'Команды:\n{self.program.command}\nOтвет:\n{self.program.answer}\n--------------------------\n'
+                self.log(answer, self.answer_logs)
+            else:
+                message = 'Статус каналов не определен'
+        except IndexError:
+            message = 'Устройство было отключено после запуска программы. Необходимо перезапустить программу'
+        except ValueError as e:
+            message = e
+        except SerialException as e:
+            message = e
+        except Exception as e:
+            message = e
 
         self.log(message, self.txt_logs)
 
@@ -403,12 +485,12 @@ class App(tk.Tk):
         self.lbl_image.grid(row=0, column=6, pady=5,
                             padx=4, rowspan=5, sticky='S')
 
-        self.lbl_sel_re6.grid(row=5, column=0, pady=5, padx=4, sticky='e')
-        self.combo_sel_re6_ch1.grid(row=5, column=1, pady=5, padx=4, sticky='we')
-        self.lbl_sel_re6_ch1.grid(row=5, column=2, pady=5, padx=4, sticky='w')
-        self.combo_sel_re6_ch2.grid(row=5, column=3, pady=5, padx=4, sticky='we')
-        self.lbl_sel_re6_ch2.grid(row=5, column=4, pady=5, padx=4, sticky='w')
-        self.btn_sel_re6.grid(row=5, column=5, pady=5, padx=4, sticky='e')
+        self.lbl_sel_reg.grid(row=5, column=0, pady=5, padx=4, sticky='e')
+        self.combo_sel_reg_ch1.grid(row=5, column=1, pady=5, padx=4, sticky='we')
+        self.lbl_sel_reg_ch1.grid(row=5, column=2, pady=5, padx=4, sticky='w')
+        self.combo_sel_reg_ch2.grid(row=5, column=3, pady=5, padx=4, sticky='we')
+        self.lbl_sel_reg_ch2.grid(row=5, column=4, pady=5, padx=4, sticky='w')
+        self.btn_sel_reg.grid(row=5, column=5, pady=5, padx=4, sticky='e')
 
         self.lbl_sync.grid(row=6, column=0, pady=5, padx=4, sticky='e')
         self.ent_sync.grid(row=6, column=1, pady=5, padx=4, sticky='we')

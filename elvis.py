@@ -19,6 +19,8 @@ class Elvis(object):
         self.SEL_REG_CH1_p_2 = 0x0001
         self.CTR = 0x0003
         # канал 1 профили и их регистры
+        self.CLR = 0x0005
+        self.SYNC = 0x0004
         self.CH1 = {
             0: {
                 'registers': {
@@ -195,12 +197,12 @@ class Elvis(object):
                 send_message = self.COMMAND_SETA.to_bytes(1, byteorder='big') \
                     + ch.to_bytes(2, byteorder='big')
                 ser.write(send_message)
-                self.command.append('0x00' + send_message.hex())
+                self.command.append(hex(int.from_bytes(send_message, byteorder='big')))
                 time.sleep(timeout_command)
                 send_message = self.COMMAND_WR.to_bytes(1, byteorder='big') \
                     + data.to_bytes(2, byteorder='big')
                 ser.write(send_message)
-                self.command.append('0x00' + send_message.hex())
+                self.command.append(hex(int.from_bytes(send_message, byteorder='big')))
                 time.sleep(timeout_command)
             #self.__output_console(ser)
             self.command = ', '.join(self.command)
@@ -268,6 +270,13 @@ class Elvis(object):
     def switch_to_CH1_profile_2(self, port_index):
         self.__exec_command([self.SEL_REG], [self.SEL_REG_CH1_p_2], port_index)
 
+    def set_sel_reg(self, ch_1, ch_2, port_index, timeout, baudrate):
+        ch_1 = bin(int(ch_1))[2:].zfill(8)
+        ch_2 = bin(int(ch_2))[2:].zfill(8)
+        data = int(ch_2 + ch_1, 2)
+        answer = self.__exec_command([self.SEL_REG], [data], port_index, timeout, baudrate)
+        return answer
+
     def set_answer(self, ser):
         """Получение ответа"""
         self.answer = []
@@ -275,11 +284,22 @@ class Elvis(object):
             a = ser.read(3)
             if a == b'':
                 break
-            self.answer.append('0x00' + a.hex()) 
-            if len(a) != 3:
-                self.answer.append(a.hex()) 
+            if len(a) < 3:
+                self.answer.append(hex(int.from_bytes(a, byteorder='big')))
                 break
+            self.answer.append(hex(int.from_bytes(a, byteorder='big')))
+
         self.answer = ', '.join(self.answer)
+
+    def set_clear(self, port_index, timeout, baudrate):
+        answer = self.__exec_command([self.CLR], [0x000F], port_index, timeout, baudrate)
+        self.state_CH1 = False
+        self.state_CH2 = False
+        return answer
+
+    def set_sync(self, number, port_index, timeout, baudrate):
+        answer = self.__exec_command([self.SYNC], [number], port_index, timeout, baudrate)
+        return answer
 
 
     def __output_console(self, ser):
