@@ -20,7 +20,7 @@ class App(tk.Tk):
         """Инициализация интерфейса"""
         s = ttk.Style()
         s.theme_use('vista')
-        self.title("Управление микросхемой 1.2")
+        self.title("Управление микросхемой 1.4")
         self.frame = tk.Frame(
             self,
             padx=10,
@@ -63,11 +63,11 @@ class App(tk.Tk):
         self.ent_fclk = ttk.Entry(
             self.frame
         )
-        self.ent_fclk.insert(0, '1000')
+        self.ent_fclk.insert(0, '1000000')
         self.ent_fclk.config(state='readonly')
         self.lbl_fclk_mghz = ttk.Label(
             self.frame,
-            text='МГц'
+            text='КГц'
         )
         self.btn_fclk_edit = ttk.Button(
             self.frame,
@@ -86,6 +86,18 @@ class App(tk.Tk):
             self.frame,
             text='Fout1'
         )
+
+        self.fout1_stringvar_ch = tk.StringVar()
+        self.fout1_stringvar_ch.trace('w', self.insert_ch)
+        self.ent_fout1_chose_ch = ttk.Entry(
+            self.frame,
+            textvariable=self.fout1_stringvar_ch
+        )
+        self.lbl_fout1_choose_ch = ttk.Label(
+            self.frame,
+            text='<- Номер частотного канала'
+        )
+
         self.btn_fout1_on = ttk.Button(
             self.frame,
             text='Включить',
@@ -104,7 +116,7 @@ class App(tk.Tk):
         )
         self.lbl_fout1_mghz = ttk.Label(
             self.frame,
-            text='МГц'
+            text='КГц'
         )
         self.combo_fout1 = ttk.Combobox(
             self.frame,
@@ -128,6 +140,18 @@ class App(tk.Tk):
             self.frame,
             text='Fout2'
         )
+
+        self.fout2_stringvar_ch = tk.StringVar()
+        self.fout2_stringvar_ch.trace('w', self.insert_ch)
+        self.ent_fout2_chose_ch = ttk.Entry(
+            self.frame,
+            textvariable=self.fout2_stringvar_ch
+        )
+        self.lbl_fout2_choose_ch = ttk.Label(
+            self.frame,
+            text='<- Номер частотного канала'
+        )
+
         self.btn_fout2_on = ttk.Button(
             self.frame,
             text='Включить',
@@ -147,7 +171,7 @@ class App(tk.Tk):
 
         self.lbl_fout2_mghz = ttk.Label(
             self.frame,
-            text='МГц'
+            text='КГц'
         )
         self.combo_fout2 = ttk.Combobox(
             self.frame,
@@ -347,7 +371,6 @@ class App(tk.Tk):
 
         self.log(message, self.txt_logs)
 
-
     def set_CH_status_to_OFF(self, channel):
         message = ''
         try:
@@ -376,7 +399,6 @@ class App(tk.Tk):
             message = str(e)
 
         self.log(message, self.txt_logs)
-
 
     def clear(self):
         try:
@@ -466,15 +488,36 @@ class App(tk.Tk):
     def check_button(self, *args):
         """Функция контроля кнопки установить частоту"""
         data_fout1 = self.fout1_stringvar.get()
-        if data_fout1.isdigit():
+        try:
+            float(data_fout1)
             self.btn_fout1_set.config(state='normal')
-        else:
+        except:
             self.btn_fout1_set.config(state='disabled')
         data_fout2 = self.fout2_stringvar.get()
-        if data_fout2.isdigit():
+        try:
+            float(data_fout2)
             self.btn_fout2_set.config(state='normal')
-        else:
+        except:
             self.btn_fout2_set.config(state='disabled')
+
+    def insert_ch(self, *args):
+        data_fout1 = self.fout1_stringvar_ch.get()
+        if data_fout1.isdigit():
+            ch = int(data_fout1)
+            freq = 160000 + (ch - 1) * 25
+            self.ent_fout1.delete(0, tk.END)
+            self.ent_fout1.insert(0, str(freq))
+        else:
+            self.ent_fout1.delete(0, tk.END)
+
+        data_fout2 = self.fout2_stringvar_ch.get()
+        if data_fout2.isdigit():
+            ch = int(data_fout2)
+            freq = 160000 + (ch - 1) * 25
+            self.ent_fout2.delete(0, tk.END)
+            self.ent_fout2.insert(0, str(freq))
+        else:
+            self.ent_fout2.delete(0, tk.END)
 
     def __grid_interface(self):
         """Отрисовать интерфейс"""
@@ -512,6 +555,10 @@ class App(tk.Tk):
         row = next(counter)
         self.lbl_fout1.grid(
             row=row, column=0, pady=5, padx=4, sticky='e')
+        self.ent_fout1_chose_ch.grid(
+            row=row, column=1, pady=5, padx=4, sticky='e')
+        self.lbl_fout1_choose_ch.grid(
+            row=row, column=2, pady=5, padx=4, sticky='we', columnspan=2)
         self.btn_fout1_on.grid(
             row=row, column=4, pady=5, padx=4, sticky='e')
         self.btn_fout1_off.grid(
@@ -538,6 +585,10 @@ class App(tk.Tk):
         row = next(counter)
         self.lbl_fout2.grid(
             row=row, column=0, pady=5, padx=4, sticky='e')
+        self.ent_fout2_chose_ch.grid(
+            row=row, column=1, pady=5, padx=4, sticky='e')
+        self.lbl_fout2_choose_ch.grid(
+            row=row, column=2, pady=5, padx=4, sticky='we', columnspan=2)
         self.btn_fout2_on.grid(
             row=row, column=4, pady=5, padx=4, sticky='e')
         self.btn_fout2_off.grid(
@@ -595,7 +646,7 @@ class App(tk.Tk):
         self.answer_logs.grid(
             row=row, column=0, pady=5, padx=4, sticky='we', columnspan=6)
 
-        self.geometry(self.center_window(width=680, height=830))
+        self.geometry(self.center_window(width=700, height=830))
         # self.resizable(False, False)
 
     def center_window(self, width, height):

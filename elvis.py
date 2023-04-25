@@ -11,7 +11,7 @@ class Elvis(object):
         self.answer = ''
         self.state_CH1 = False
         self.state_CH2 = False
-        self.processor_frequency = 1000
+        self.processor_frequency = 1000000
         self.COMMAND_SETA = 0x0010  # Команда установки регистра
         self.COMMAND_WR = 0x0020  # Команда записи
         self.SEL_REG = 0x0002  # Выбор профиля канала 1
