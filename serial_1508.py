@@ -20,7 +20,7 @@ class App(tk.Tk):
         """Инициализация интерфейса"""
         s = ttk.Style()
         s.theme_use('vista')
-        self.title("Управление микросхемой 1.4")
+        self.title("Управление микросхемой 1.4.1")
         self.frame = tk.Frame(
             self,
             padx=10,
@@ -504,6 +504,10 @@ class App(tk.Tk):
         data_fout1 = self.fout1_stringvar_ch.get()
         if data_fout1.isdigit():
             ch = int(data_fout1)
+            if ch > 1601:
+                ch = 1601
+                self.ent_fout1_chose_ch.delete(0, tk.END)
+                self.ent_fout1_chose_ch.insert(0, '1601')
             freq = 160000 + (ch - 1) * 25
             self.ent_fout1.delete(0, tk.END)
             self.ent_fout1.insert(0, str(freq))
@@ -513,6 +517,10 @@ class App(tk.Tk):
         data_fout2 = self.fout2_stringvar_ch.get()
         if data_fout2.isdigit():
             ch = int(data_fout2)
+            if ch > 1601:
+                ch = 1601
+                self.ent_fout2_chose_ch.delete(0, tk.END)
+                self.ent_fout2_chose_ch.insert(0, '1601')
             freq = 160000 + (ch - 1) * 25
             self.ent_fout2.delete(0, tk.END)
             self.ent_fout2.insert(0, str(freq))
