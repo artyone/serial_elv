@@ -20,7 +20,7 @@ class App(tk.Tk):
         """Инициализация интерфейса"""
         s = ttk.Style()
         s.theme_use('vista')
-        self.title("Управление микросхемой 1.4.1")
+        self.title("Управление микросхемой 1.5")
         self.frame = tk.Frame(
             self,
             padx=10,
@@ -136,6 +136,64 @@ class App(tk.Tk):
             state='disabled',
             command=lambda: self.set_fout(1)
         )
+
+        self.lbl_modulation = ttk.Label(
+            self.frame,
+            text='Модуляция'
+        )
+        self.var_modulation = tk.BooleanVar()
+        self.chk_modulation = tk.Checkbutton(
+            self.frame,
+            text="Вкл",
+            variable=self.var_modulation,
+            command=self.show_modulation_fout1
+        )
+
+        self.modulation_block_fout1 = tk.Frame(self.frame)
+
+        self.lbl_fout1_modulation = ttk.Label(
+            self.modulation_block_fout1,
+            text='F несущая'
+        )
+
+        self.fout1_stringvar_modulation = tk.StringVar()
+        self.fout1_stringvar_modulation.trace('w', self.check_button)
+        self.ent_fout1_modulation = ttk.Entry(
+            self.modulation_block_fout1,
+            textvariable=self.fout1_stringvar_modulation
+        )
+
+        self.lbl_delta_fout1_modulation = ttk.Label(
+            self.modulation_block_fout1,
+            text='Ширина модуляции'
+        )
+        self.delta_fout1_stringvar_modulation = tk.StringVar()
+        self.delta_fout1_stringvar_modulation.trace('w', self.check_button)
+        self.ent_delta_fout1_modulation = ttk.Entry(
+            self.modulation_block_fout1,
+            textvariable=self.delta_fout1_stringvar_modulation
+        )
+
+        self.btn_fout1_on_modulation = ttk.Button(
+            self.modulation_block_fout1,
+            text='Включить',
+            command=lambda: self.set_CH_status_to_ON(1)
+        )
+        self.btn_fout1_off_modulation = ttk.Button(
+            self.modulation_block_fout1,
+            text='Выключить',
+            command=lambda: self.set_CH_status_to_OFF(1)
+        )
+
+        self.btn_fout1_set_modulation = ttk.Button(
+            self.modulation_block_fout1,
+            text='Установить',
+            state='disabled',
+            command=lambda: self.set_fout_modulation(1)
+        )
+
+
+
         self.lbl_fout2 = ttk.Label(
             self.frame,
             text='Fout2'
@@ -341,6 +399,62 @@ class App(tk.Tk):
             return self.log(e, self.txt_logs)
         except Exception as e:
             return self.log(e, self.txt_logs)
+        
+    def set_fout_modulation(self, channel_number):
+            """Изменение частоты 1 и 2 канала"""
+            if channel_number == 1:
+                frequency = self.ent_fout1_modulation.get()
+                delta_frequency = self.ent_delta_fout1_modulation.get()
+                profiles_index = [2, 0, 1]
+                amplitude = self.ent_amplitude_fout1.get()
+            else:
+                #TODO написать реализацию для фоут2
+                pass
+            try:
+                timeout = float(self.ent_timeout.get())
+                baudrate = float(self.ent_baudrate.get())
+            except:
+                return self.log('Введены неверные значения timeout или baudrate', self.txt_logs)
+            if not frequency.isdigit() or not delta_frequency.isdigit():
+                return self.log('Неверно введена частота Fout или delta Fout. Канал:'
+                                + str(channel_number),
+                                self.txt_logs)
+            if int(frequency) >= self.program.processor_frequency:
+                return self.log('Частота процессора должна быть больше Fout' + str(channel_number), self.txt_logs)
+            if int(delta_frequency) >= int(frequency):
+                return self.log('delta fout должна быть меньше Fout' + str(channel_number), self.txt_logs)
+            try:
+                for profile in profiles_index:
+                    if profile == 2:
+                        frequency = int(frequency)
+                    if profile == 0:
+                        frequency = int(frequency) + int(delta_frequency)
+                    if profile == 1:
+                        frequency = int(frequency) - int(delta_frequency)
+                    if self.program.set_fout(
+                        frequency=frequency,
+                        amplitude=int(amplitude),
+                        port_index=self.cmb_com.current(),
+                        channel_number=channel_number,
+                        profile_index=profile,
+                        timeout=timeout,
+                        baudrate=baudrate
+                    ):
+                        message = f'Частота: {frequency}, Амплитуда: {amplitude}. timeout: {timeout}, baudrate: {baudrate}'
+                        answer = f'Команды:\n{self.program.command}\nOтвет:\n{self.program.answer}\n--------------------------\n'
+
+                    self.log(message, self.txt_logs)
+                    self.log(answer, self.answer_logs)
+            except ValueError as e:
+                return self.log(e, self.txt_logs)
+            except IndexError:
+                return self.log(
+                    'Устройство было отключено после запуска программы. Необходимо перезапустить программу',
+                    self.txt_logs)
+            except SerialException as e:
+                return self.log(e, self.txt_logs)
+            except Exception as e:
+                return self.log(e, self.txt_logs)
 
     def set_CH_status_to_ON(self, channel):
         message = ''
@@ -429,11 +543,12 @@ class App(tk.Tk):
 
         self.log(message, self.txt_logs)
 
-    def sync(self):
+    def sync(self, number=None):
         try:
             timeout = float(self.ent_timeout.get())
             baudrate = float(self.ent_baudrate.get())
-            number = int(self.ent_sync.get(), 16)
+            if number is None:
+                number = int(self.ent_sync.get(), 16)
         except:
             return self.log('Введены неверные значения sync, timeout или baudrate')
 
@@ -485,6 +600,18 @@ class App(tk.Tk):
 
         self.log(message, self.txt_logs)
 
+    def show_modulation_fout1(self):
+        if self.var_modulation.get():
+            self.chk_modulation.config(text='Выкл')
+            self.modulation_block_fout1.grid()
+            self.modulation_block_fout1.update()
+            self.update_window_size(self.modulation_block_fout1.winfo_height())
+            self.sync(int('0100', 16))
+        else:
+            self.chk_modulation.config(text='Вкл')
+            self.modulation_block_fout1.grid_remove()
+            self.update_window_size(-self.modulation_block_fout1.winfo_height())
+
     def check_button(self, *args):
         """Функция контроля кнопки установить частоту"""
         data_fout1 = self.fout1_stringvar.get()
@@ -499,6 +626,16 @@ class App(tk.Tk):
             self.btn_fout2_set.config(state='normal')
         except:
             self.btn_fout2_set.config(state='disabled')
+
+        data_fout1_modulation = self.fout1_stringvar_modulation.get()
+        data_delta_fout1_modulation = self.delta_fout1_stringvar_modulation.get()
+        try:
+            float(data_fout1_modulation)
+            float(data_delta_fout1_modulation)
+            self.btn_fout1_set_modulation.config(state='normal')
+        except:
+            self.btn_fout1_set_modulation.config(state='disabled')
+
 
     def insert_ch(self, *args):
         data_fout1 = self.fout1_stringvar_ch.get()
@@ -532,7 +669,7 @@ class App(tk.Tk):
         counter = count(0)
         row = next(counter)
         self.lbl_com.grid(
-            row=row, column=0, pady=5, padx=4, sticky='w')
+            row=row, column=0, pady=5, padx=4, sticky='e')
         self.cmb_com.grid(
             row=row, column=1, pady=5, padx=4, sticky='we', columnspan=5)
 
@@ -585,6 +722,34 @@ class App(tk.Tk):
 
         self.btn_fout1_set.grid(
             row=row, column=5, pady=5, padx=4, sticky='w')
+
+        row = next(counter)
+        self.chk_modulation.grid(row=row, column=1, sticky='w', padx=5, pady=5)
+        self.lbl_modulation.grid(row=row, column=0, sticky='e', padx=5, pady=5)
+
+        row = next(counter)
+        self.modulation_block_fout1.grid(
+            row=row, column=0, columnspan=6, rowspan=2, sticky='we'
+        )
+        self.modulation_block_fout1.grid_remove()
+        row = next(counter)
+
+        self.lbl_fout1_modulation.grid(
+            row=0, column=0, sticky='e', padx=5, pady=5)
+        self.ent_fout1_modulation.grid(
+            row=0, column=1, sticky='w', padx=5, pady=5)
+        self.btn_fout1_on_modulation.grid(
+            row=0, column=2, sticky='e', padx=5, pady=5)
+        self.btn_fout1_off_modulation.grid(
+            row=0, column=3, sticky='e', padx=5, pady=5)
+
+        self.lbl_delta_fout1_modulation.grid(
+            row=1, column=0, sticky='e', padx=5, pady=5)
+        self.ent_delta_fout1_modulation.grid(
+            row=1, column=1, sticky='w', padx=5, pady=5)
+        self.btn_fout1_set_modulation.grid(
+            row=1, column=3, sticky='w', padx=5, pady=5)
+        
 
         row = next(counter)
         self.separator_2.grid(
@@ -654,8 +819,16 @@ class App(tk.Tk):
         self.answer_logs.grid(
             row=row, column=0, pady=5, padx=4, sticky='we', columnspan=6)
 
-        self.geometry(self.center_window(width=700, height=830))
+        self.update_window_size()
+
+        # self.geometry(self.center_window(width=700, height=830))
         # self.resizable(False, False)
+
+    def update_window_size(self, additional=0):
+        self.update()
+        width = self.winfo_width()
+        height = self.winfo_height()
+        self.geometry(f"{width}x{height + additional}")
 
     def center_window(self, width, height):
         """Рассчет для центровки положения окна на экране"""
