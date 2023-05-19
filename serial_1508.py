@@ -20,7 +20,7 @@ class App(tk.Tk):
         """Инициализация интерфейса"""
         s = ttk.Style()
         s.theme_use('vista')
-        self.title("Управление микросхемой 1.5")
+        self.title("Управление микросхемой 1.5.1")
         self.frame = tk.Frame(
             self,
             padx=10,
@@ -191,8 +191,6 @@ class App(tk.Tk):
             state='disabled',
             command=lambda: self.set_fout_modulation(1)
         )
-
-
 
         self.lbl_fout2 = ttk.Label(
             self.frame,
@@ -399,62 +397,64 @@ class App(tk.Tk):
             return self.log(e, self.txt_logs)
         except Exception as e:
             return self.log(e, self.txt_logs)
-        
-    def set_fout_modulation(self, channel_number):
-            """Изменение частоты 1 и 2 канала"""
-            if channel_number == 1:
-                frequency = self.ent_fout1_modulation.get()
-                delta_frequency = self.ent_delta_fout1_modulation.get()
-                profiles_index = [2, 0, 1]
-                amplitude = self.ent_amplitude_fout1.get()
-            else:
-                #TODO написать реализацию для фоут2
-                pass
-            try:
-                timeout = float(self.ent_timeout.get())
-                baudrate = float(self.ent_baudrate.get())
-            except:
-                return self.log('Введены неверные значения timeout или baudrate', self.txt_logs)
-            if not frequency.isdigit() or not delta_frequency.isdigit():
-                return self.log('Неверно введена частота Fout или delta Fout. Канал:'
-                                + str(channel_number),
-                                self.txt_logs)
-            if int(frequency) >= self.program.processor_frequency:
-                return self.log('Частота процессора должна быть больше Fout' + str(channel_number), self.txt_logs)
-            if int(delta_frequency) >= int(frequency):
-                return self.log('delta fout должна быть меньше Fout' + str(channel_number), self.txt_logs)
-            try:
-                for profile in profiles_index:
-                    if profile == 2:
-                        frequency = int(frequency)
-                    if profile == 0:
-                        frequency = int(frequency) + int(delta_frequency)
-                    if profile == 1:
-                        frequency = int(frequency) - int(delta_frequency)
-                    if self.program.set_fout(
-                        frequency=frequency,
-                        amplitude=int(amplitude),
-                        port_index=self.cmb_com.current(),
-                        channel_number=channel_number,
-                        profile_index=profile,
-                        timeout=timeout,
-                        baudrate=baudrate
-                    ):
-                        message = f'Частота: {frequency}, Амплитуда: {amplitude}. timeout: {timeout}, baudrate: {baudrate}'
-                        answer = f'Команды:\n{self.program.command}\nOтвет:\n{self.program.answer}\n--------------------------\n'
 
-                    self.log(message, self.txt_logs)
-                    self.log(answer, self.answer_logs)
-            except ValueError as e:
-                return self.log(e, self.txt_logs)
-            except IndexError:
-                return self.log(
-                    'Устройство было отключено после запуска программы. Необходимо перезапустить программу',
-                    self.txt_logs)
-            except SerialException as e:
-                return self.log(e, self.txt_logs)
-            except Exception as e:
-                return self.log(e, self.txt_logs)
+    def set_fout_modulation(self, channel_number):
+        """Изменение частоты 1 и 2 канала"""
+        if channel_number == 1:
+            frequency = self.ent_fout1_modulation.get()
+            delta_frequency = self.ent_delta_fout1_modulation.get()
+            profiles_index = [2, 0, 1]
+            amplitude = self.ent_amplitude_fout1.get()
+        else:
+            # TODO написать реализацию для фоут2
+            pass
+        try:
+            timeout = float(self.ent_timeout.get())
+            baudrate = float(self.ent_baudrate.get())
+        except:
+            return self.log('Введены неверные значения timeout или baudrate', self.txt_logs)
+        if not frequency.isdigit() or not delta_frequency.isdigit():
+            return self.log(
+                'Неверно введена частота Fout или delta Fout. Канал:'
+                + str(channel_number),
+                self.txt_logs
+            )
+        if int(frequency) >= self.program.processor_frequency:
+            return self.log('Частота процессора должна быть больше Fout' + str(channel_number), self.txt_logs)
+        if int(delta_frequency) >= int(frequency):
+            return self.log('delta fout должна быть меньше Fout' + str(channel_number), self.txt_logs)
+        try:
+            for profile in profiles_index:
+                if profile == 2:
+                    send_frequency = int(frequency)
+                if profile == 0:
+                    send_frequency = int(frequency) + int(delta_frequency)
+                if profile == 1:
+                    send_frequency = int(frequency) - int(delta_frequency)
+                if self.program.set_fout(
+                    frequency=send_frequency,
+                    amplitude=int(amplitude),
+                    port_index=self.cmb_com.current(),
+                    channel_number=channel_number,
+                    profile_index=profile,
+                    timeout=timeout,
+                    baudrate=baudrate
+                ):
+                    message = f'Частота: {send_frequency}, Амплитуда: {amplitude}, Профиль: {profile}. timeout: {timeout}, baudrate: {baudrate}'
+                    answer = f'Команды:\n{self.program.command}\nOтвет:\n{self.program.answer}\n--------------------------\n'
+
+                self.log(message, self.txt_logs)
+                self.log(answer, self.answer_logs)
+        except ValueError as e:
+            return self.log(e, self.txt_logs)
+        except IndexError:
+            return self.log(
+                'Устройство было отключено после запуска программы. Необходимо перезапустить программу',
+                self.txt_logs)
+        except SerialException as e:
+            return self.log(e, self.txt_logs)
+        except Exception as e:
+            return self.log(e, self.txt_logs)
 
     def set_CH_status_to_ON(self, channel):
         message = ''
@@ -611,6 +611,7 @@ class App(tk.Tk):
             self.chk_modulation.config(text='Вкл')
             self.modulation_block_fout1.grid_remove()
             self.update_window_size(-self.modulation_block_fout1.winfo_height())
+            self.sync(int('0000', 16))
 
     def check_button(self, *args):
         """Функция контроля кнопки установить частоту"""
@@ -635,7 +636,6 @@ class App(tk.Tk):
             self.btn_fout1_set_modulation.config(state='normal')
         except:
             self.btn_fout1_set_modulation.config(state='disabled')
-
 
     def insert_ch(self, *args):
         data_fout1 = self.fout1_stringvar_ch.get()
@@ -749,7 +749,6 @@ class App(tk.Tk):
             row=1, column=1, sticky='w', padx=5, pady=5)
         self.btn_fout1_set_modulation.grid(
             row=1, column=3, sticky='w', padx=5, pady=5)
-        
 
         row = next(counter)
         self.separator_2.grid(
