@@ -20,6 +20,7 @@ class Elvis(object):
         self.CTR = 0x0003
         self.CLR = 0x0005
         self.SYNC = 0x0004
+        self.ROUTE = 0x0007
         # канал 1 профили и их регистры
         self.CH1 = {
             0: {
@@ -32,9 +33,9 @@ class Elvis(object):
                     'CH1_Offset0': 0x1406
                 },
                 'data': {
-                    'CH1_dPh0_L_d' : 0x0000,
-                    'CH1_dPh0_M_d' : 0x0000,
-                    'CH1_dPh0_H_d' : 0x0000,
+                    'CH1_dPh0_L_d': 0x0000,
+                    'CH1_dPh0_M_d': 0x0000,
+                    'CH1_dPh0_H_d': 0x0000,
                     'CH1_p0_d': 0x0000,
                     'CH1_Mul0_d': 0x7FFF,
                     'CH1_Offset0_d': 0x0000
@@ -50,9 +51,9 @@ class Elvis(object):
                     'CH1_Offset1': 0x1416
                 },
                 'data': {
-                    'CH1_dPh1_L_d' : 0x0000,
-                    'CH1_dPh1_M_d' : 0x0000,
-                    'CH1_dPh1_H_d' : 0x0000,
+                    'CH1_dPh1_L_d': 0x0000,
+                    'CH1_dPh1_M_d': 0x0000,
+                    'CH1_dPh1_H_d': 0x0000,
                     'CH1_p1_d': 0x0000,
                     'CH1_Mul1_d': 0x7FFF,
                     'CH1_Offset1_d': 0x0000
@@ -68,9 +69,9 @@ class Elvis(object):
                     'CH1_Offset2': 0x1426
                 },
                 'data': {
-                    'CH1_dPh2_L_d' : 0x0000,
-                    'CH1_dPh2_M_d' : 0x0000,
-                    'CH1_dPh2_H_d' : 0x0000,
+                    'CH1_dPh2_L_d': 0x0000,
+                    'CH1_dPh2_M_d': 0x0000,
+                    'CH1_dPh2_H_d': 0x0000,
                     'CH1_p2_d': 0x0000,
                     'CH1_Mul2_d': 0x7FFF,
                     'CH1_Offset2_d': 0x0000
@@ -86,9 +87,9 @@ class Elvis(object):
                     'CH1_Offset3': 0x1436
                 },
                 'data': {
-                    'CH1_dPh2_L_d' : 0x0000,
-                    'CH1_dPh2_M_d' : 0x0000,
-                    'CH1_dPh2_H_d' : 0x0000,
+                    'CH1_dPh2_L_d': 0x0000,
+                    'CH1_dPh2_M_d': 0x0000,
+                    'CH1_dPh2_H_d': 0x0000,
                     'CH1_p3_d': 0x0000,
                     'CH1_Mul3_d': 0x7FFF,
                     'CH1_Offset3_d': 0x0000
@@ -107,9 +108,9 @@ class Elvis(object):
                     'CH2_Offset0': 0x2406
                 },
                 'data': {
-                    'CH2_dPh0_L_d' : 0x0000,
-                    'CH2_dPh0_M_d' : 0x0000,
-                    'CH2_dPh0_H_d' : 0x0000,
+                    'CH2_dPh0_L_d': 0x0000,
+                    'CH2_dPh0_M_d': 0x0000,
+                    'CH2_dPh0_H_d': 0x0000,
                     'CH2_p0_d': 0x0000,
                     'CH2_Mul0_d': 0x7FFF,
                     'CH2_Offset0_d': 0x0000
@@ -125,9 +126,9 @@ class Elvis(object):
                     'CH2_Offset1': 0x2416
                 },
                 'data': {
-                    'CH2_dPh1_L_d' : 0x0000,
-                    'CH2_dPh1_M_d' : 0x0000,
-                    'CH2_dPh1_H_d' : 0x0000,
+                    'CH2_dPh1_L_d': 0x0000,
+                    'CH2_dPh1_M_d': 0x0000,
+                    'CH2_dPh1_H_d': 0x0000,
                     'CH2_p1_d': 0x0000,
                     'CH2_Mul1_d': 0x7FFF,
                     'CH2_Offset1_d': 0x0000
@@ -143,9 +144,9 @@ class Elvis(object):
                     'CH2_Offset2': 0x2426
                 },
                 'data': {
-                    'CH2_dPh2_L_d' : 0x0000,
-                    'CH2_dPh2_M_d' : 0x0000,
-                    'CH2_dPh2_H_d' : 0x0000,
+                    'CH2_dPh2_L_d': 0x0000,
+                    'CH2_dPh2_M_d': 0x0000,
+                    'CH2_dPh2_H_d': 0x0000,
                     'CH2_p2_d': 0x0000,
                     'CH2_Mul2_d': 0x7FFF,
                     'CH2_Offset2_d': 0x0000
@@ -161,9 +162,9 @@ class Elvis(object):
                     'CH2_Offset3': 0x2436
                 },
                 'data': {
-                    'CH2_dPh2_L_d' : 0x0000,
-                    'CH2_dPh2_M_d' : 0x0000,
-                    'CH2_dPh2_H_d' : 0x0000,
+                    'CH2_dPh2_L_d': 0x0000,
+                    'CH2_dPh2_M_d': 0x0000,
+                    'CH2_dPh2_H_d': 0x0000,
                     'CH2_p3_d': 0x0000,
                     'CH2_Mul3_d': 0x7FFF,
                     'CH2_Offset3_d': 0x0000
@@ -217,7 +218,14 @@ class Elvis(object):
 
         return self.__exec_command(all_dPh_registers, all_dPh_data, port_index, timeout, baudrate)
 
-    def __exec_command(self, registers, datas, port_index, timeout_command, baudrate):
+    def __exec_command(
+        self,
+        registers: list,
+        datas: list,
+        port_index,
+        timeout_command,
+        baudrate
+    ):
         """Функция исполнения команд и записи данных. 
         Формат данных см. в описании set_fout.
         Команды всегда выполняются в связке 2 из команд. 
@@ -361,6 +369,12 @@ class Elvis(object):
         """Установки параметра SYNC"""
         answer = self.__exec_command(
             [self.SYNC], [number], port_index, timeout, baudrate)
+        return answer
+
+    def set_route(self, number, port_index, timeout, baudrate):
+        """Установки параметра ROUTE"""
+        answer = self.__exec_command(
+            [self.ROUTE], [number], port_index, timeout, baudrate)
         return answer
 
     def __output_console(self, ser):

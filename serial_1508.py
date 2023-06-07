@@ -20,7 +20,7 @@ class App(tk.Tk):
         """Инициализация интерфейса"""
         s = ttk.Style()
         s.theme_use('vista')
-        self.title("Управление микросхемой 1.5.1")
+        self.title("Управление микросхемой 1.5.2")
         self.frame = tk.Frame(
             self,
             padx=10,
@@ -292,6 +292,20 @@ class App(tk.Tk):
             self.frame,
             text='Установить',
             command=self.sync
+        )
+
+        self.lbl_route = ttk.Label(
+            self.frame,
+            text='ROUTE'
+        )
+        self.ent_route = ttk.Entry(
+            self.frame
+        )
+        self.ent_route.insert(0, '0000')
+        self.btn_route = ttk.Button(
+            self.frame,
+            text='Установить',
+            command=self.route
         )
 
         self.btn_clear = ttk.Button(
@@ -572,6 +586,36 @@ class App(tk.Tk):
 
         self.log(message, self.txt_logs)
 
+    def route(self, number=None):
+        print(1)
+        try:
+            timeout = float(self.ent_timeout.get())
+            baudrate = float(self.ent_baudrate.get())
+            if number is None:
+                number = int(self.ent_route.get(), 16)
+        except:
+            return self.log('Введены неверные значения route, timeout или baudrate')
+
+        try:
+            answer = self.program.set_route(
+                number, self.cmb_com.current(), timeout, baudrate)
+            if answer:
+                message = f'ROUTE {hex(number)} установлен. timeout: {timeout}, baudrate: {baudrate}'
+                answer = f'Команды:\n{self.program.command}\nOтвет:\n{self.program.answer}\n--------------------------\n'
+                self.log(answer, self.answer_logs)
+            else:
+                message = 'Статус каналов не определен'
+        except IndexError:
+            message = 'Устройство было отключено после запуска программы. Необходимо перезапустить программу'
+        except ValueError as e:
+            message = str(e)
+        except SerialException as e:
+            message = str(e)
+        except Exception as e:
+            message = str(e)
+
+        self.log(message, self.txt_logs)
+
     def set_sel_reg(self):
         try:
             timeout = float(self.ent_timeout.get())
@@ -802,6 +846,14 @@ class App(tk.Tk):
         self.ent_sync.grid(
             row=row, column=1, pady=5, padx=4, sticky='we')
         self.btn_sync.grid(
+            row=row, column=5, pady=5, padx=4, sticky='w')
+
+        row = next(counter)
+        self.lbl_route.grid(
+            row=row, column=0, pady=5, padx=4, sticky='e')
+        self.ent_route.grid(
+            row=row, column=1, pady=5, padx=4, sticky='we')
+        self.btn_route.grid(
             row=row, column=5, pady=5, padx=4, sticky='w')
 
         row = next(counter)
